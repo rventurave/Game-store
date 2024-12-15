@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestión de Productos - GameStore</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Gestión de Productos</h2>
+        
+        <!-- Botón para abrir formulario de nuevo producto -->
+        <button onclick="window.location.href='/admin/productos/nuevo'" class="add-btn">
+            Agregar Nuevo Producto
+        </button>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Descripción</th>
+                    <th>Categoría</th>
+                    <th>Precio Venta</th>
+                    <th>Stock</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% productos.forEach(producto => { %>
+                    <tr>
+                        <td><%= producto.producto_id %></td>
+                        <td><%= producto.descripcion %></td>
+                        <td><%= producto.nombre_categoria %></td>
+                        <td>$<%= producto.precio_venta %></td>
+                        <td><%= producto.stock %></td>
+                        <td>
+                            <a href="/admin/productos/editar/<%= producto.producto_id %>">Editar</a>
+                            <a href="/admin/productos/eliminar/<%= producto.producto_id %>">Eliminar</a>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        <a href="/admin-dashboard" class="back-btn">Volver al Panel</a>
+    </div>
+</body>
+</html> 

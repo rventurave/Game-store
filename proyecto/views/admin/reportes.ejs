@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reportes - GameStore</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Panel de Reportes</h2>
+
+        <!-- Resumen General -->
+        <div class="report-summary">
+            <div class="summary-card">
+                <h3>Ventas del Mes</h3>
+                <p class="amount">S/. <%= ventasTotales.ventas_totales || 0 %></p>
+            </div>
+        </div>
+
+        <!-- Productos Más Vendidos -->
+        <div class="report-section">
+            <h3>Top 5 Productos Más Vendidos</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Marca</th>
+                        <th>Cantidad Vendida</th>
+                        <th>Ingresos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% productosPopulares.forEach(producto => { %>
+                        <tr>
+                            <td><%= producto.descripcion %></td>
+                            <td><%= producto.marca %></td>
+                            <td><%= producto.total_vendido %></td>
+                            <td>S/. <%= producto.ingresos_totales %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Alerta de Stock -->
+        <div class="report-section">
+            <h3>Productos con Stock Bajo</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Stock Actual</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% stockBajo.forEach(producto => { %>
+                        <tr class="<%= producto.stock < 5 ? 'stock-critical' : 'stock-warning' %>">
+                            <td><%= producto.descripcion %></td>
+                            <td><%= producto.stock %></td>
+                            <td>
+                                <% if(producto.stock < 5) { %>
+                                    <span class="badge critical">Crítico</span>
+                                <% } else { %>
+                                    <span class="badge warning">Bajo</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Ventas por Sucursal -->
+        <div class="report-section">
+            <h3>Rendimiento por Sucursal</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Sucursal</th>
+                        <th>Total Ventas</th>
+                        <th>Ingresos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% ventasPorSucursal.forEach(sucursal => { %>
+                        <tr>
+                            <td><%= sucursal.nombre %></td>
+                            <td><%= sucursal.total_ventas %></td>
+                            <td>S/. <%= sucursal.ingresos || 0 %></td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+        <a href="/admin-dashboard" class="back-btn">Volver al Panel</a>
+    </div>
+</body>
+</html> 

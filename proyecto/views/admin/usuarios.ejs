@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestión de Usuarios - GameStore</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Gestión de Usuarios</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>DNI</th>
+                    <th>Nombre</th>
+                    <th>Apellidos</th>
+                    <th>Email</th>
+                    <th>Tipo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% usuarios.forEach(usuario => { %>
+                    <tr>
+                        <td><%= usuario.DNI %></td>
+                        <td><%= usuario.nombre %></td>
+                        <td><%= usuario.apellido_p %> <%= usuario.apellido_m %></td>
+                        <td><%= usuario.email %></td>
+                        <td><%= usuario.tipo %></td>
+                        <td>
+                            <a href="/admin/usuario/editar/<%= usuario.DNI %>">Editar</a>
+                            <a href="/admin/usuario/eliminar/<%= usuario.DNI %>">Eliminar</a>
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+        <a href="/admin-dashboard" class="back-btn">Volver al Panel</a>
+    </div>
+</body>
+</html> 

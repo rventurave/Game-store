@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Panel de Administrador - GameStore</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Panel de Administrador - GameStore</h2>
+        <p>Bienvenido, <%= username %></p>
+        
+        <div class="dashboard-menu">
+            <a href="/admin/usuarios" class="menu-item">
+                <h3>Gestión de Usuarios</h3>
+                <p>Administrar clientes y empleados</p>
+            </a>
+            
+            <a href="/admin/productos" class="menu-item">
+                <h3>Gestión de Productos</h3>
+                <p>Inventario y catálogo</p>
+            </a>
+            
+            <a href="/admin/ventas" class="menu-item">
+                <h3>Gestión de Ventas</h3>
+                <p>Registro y seguimiento</p>
+            </a>
+            
+            <a href="/admin/reportes" class="menu-item">
+                <h3>Reportes</h3>
+                <p>Estadísticas y análisis</p>
+            </a>
+            
+            <a href="/admin/sucursales" class="menu-item">
+                <h3>Sucursales</h3>
+                <p>Gestión de tiendas</p>
+            </a>
+            
+            <a href="/admin/mantenimiento" class="menu-item">
+                <h3>Servicio Técnico</h3>
+                <p>Control de reparaciones</p>
+            </a>
+        </div>
+        
+        <a href="/logout" class="logout-btn">Cerrar sesión</a>
+    </div>
+</body>
+</html>

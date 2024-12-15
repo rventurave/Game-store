@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Administrador</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login Administrador</h2>
+        <form action="/auth/admin-login" method="POST">
+            <input type="text" name="username" placeholder="Usuario MySQL (root)" required>
+            <input type="password" name="password" placeholder="Contraseña MySQL" required>
+            <button type="submit">Acceder como Administrador</button>
+        </form>
+        <p>¿Eres cliente? <a href="/client-login">Acceso Clientes</a></p>
+        <p>¿No tienes cuenta? <a href="/register">Regístrate</a></p>
+    </div>
+</body>
+</html>

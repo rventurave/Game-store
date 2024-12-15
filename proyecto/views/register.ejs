@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registro de Cliente</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2>Registro de Cliente</h2>
+        <form action="/auth/register" method="POST">
+            <!-- Datos de la tabla Persona -->
+            <input type="number" name="DNI" placeholder="DNI" required>
+            <input type="text" name="nombre" placeholder="Nombre" required>
+            <input type="text" name="apellido_p" placeholder="Apellido Paterno" required>
+            <input type="text" name="apellido_m" placeholder="Apellido Materno" required>
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="tel" name="celular" placeholder="Celular" required>
+            <select name="genero" required>
+                <option value="">Seleccione Género</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+                <option value="Otro">Otro</option>
+            </select>
+            
+            <!-- Contraseña para autenticación -->
+            <input type="password" name="password" placeholder="Contraseña" required>
+            <input type="password" name="confirm_password" placeholder="Confirmar Contraseña" required>
+            
+            <button type="submit">Registrar Cliente</button>
+        </form>
+        <p>¿Ya tienes cuenta? <a href="/client-login">Iniciar Sesión</a></p>
+    </div>
+</body>
+</html>

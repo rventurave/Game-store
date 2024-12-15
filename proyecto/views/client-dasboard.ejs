@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Cliente - GameStore</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Bienvenido a GameStore, <%= nombre %></h2>
+        <p>DNI: <%= DNI %></p>
+        
+        <div class="dashboard-menu">
+            <a href="/productos" class="menu-item">
+                <h3>Catálogo de Juegos</h3>
+                <p>Explora nuestros productos</p>
+            </a>
+            
+            <a href="/mis-compras" class="menu-item">
+                <h3>Mis Compras</h3>
+                <p>Historial de pedidos</p>
+            </a>
+            
+            <a href="/mantenimiento" class="menu-item">
+                <h3>Servicio Técnico</h3>
+                <p>Mantenimiento de equipos</p>
+            </a>
+            
+            <a href="/mi-perfil" class="menu-item">
+                <h3>Mi Perfil</h3>
+                <p>Gestionar información personal</p>
+            </a>
+        </div>
+        
+        <a href="/logout" class="logout-btn">Cerrar sesión</a>
+    </div>
+</body>
+</html>

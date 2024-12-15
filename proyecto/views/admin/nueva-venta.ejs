@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nueva Venta - GameStore</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Registrar Nueva Venta</h2>
+
+        <form id="ventaForm" action="/admin/ventas/crear" method="POST" class="venta-form">
+            <div class="form-group">
+                <label for="cliente_id">Cliente:</label>
+                <select name="cliente_id" required>
+                    <option value="">Seleccione un cliente</option>
+                    <% clientes.forEach(cliente => { %>
+                        <option value="<%= cliente.DNI %>">
+                            <%= cliente.nombre %> <%= cliente.apellido_p %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="empleado_id">Vendedor:</label>
+                <select name="empleado_id" required>
+                    <option value="">Seleccione un vendedor</option>
+                    <% empleados.forEach(empleado => { %>
+                        <option value="<%= empleado.DNI %>">
+                            <%= empleado.nombre %> <%= empleado.apellido_p %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="sucursal_id">Sucursal:</label>
+                <select name="sucursal_id" required>
+                    <option value="">Seleccione una sucursal</option>
+                    <% sucursales.forEach(sucursal => { %>
+                        <option value="<%= sucursal.sucursal_id %>">
+                            <%= sucursal.nombre %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div id="productos-container">
+                <h3>Productos</h3>
+                <div class="producto-item">
+                    <select name="productos[]" required>
+                        <option value="">Seleccione un producto</option>
+                        <% productos.forEach(producto => { %>
+                            <option value="<%= producto.producto_id %>" 
+                                    data-precio="<%= producto.precio_venta %>"
+                                    data-stock="<%= producto.stock %>">
+                                <%= producto.descripcion %> - S/.<%= producto.precio_venta %>
+                            </option>
+                        <% }); %>
+                    </select>
+                    <input type="number" name="cantidades[]" min="1" placeholder="Cantidad" required>
+                    <span class="subtotal">S/.0.00</span>
+                </div>
+            </div>
+
+            <button type="button" id="agregarProducto" class="add-btn">Agregar Producto</button>
+
+            <div class="form-group">
+                <label for="metodo_pago">Método de Pago:</label>
+                <select name="metodo_pago" required>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="tarjeta">Tarjeta</option>
+                    <option value="transferencia">Transferencia</option>
+                </select>
+            </div>
+
+            <div class="total-section">
+                <h3>Total: S/.<span id="total">0.00</span></h3>
+                <input type="hidden" name="total_venta" id="total_venta" value="0">
+            </div>
+
+            <button type="submit" class="submit-btn">Registrar Venta</button>
+            <a href="/admin/ventas" class="cancel-btn">Cancelar</a>
+        </form>
+    </div>
+
+    <script>
+        // JavaScript para manejar la lógica del formulario
+        document.addEventListener('DOMContentLoaded', function() {
+            const productosContainer = document.getElementById('productos-container');
+            const agregarProductoBtn = document.getElementById('agregarProducto');
+            const totalSpan = document.getElementById('total');
+            const totalInput = document.getElementById('total_venta');
+
+            function actualizarTotal() {
+                let total = 0;
+                document.querySelectorAll('.producto-item').forEach(item => {
+                    const select = item.querySelector('select');
+                    const cantidad = item.querySelector('input[type="number"]').value;
+                    const precio = select.options[select.selectedIndex].dataset.precio;
+                    const subtotal = precio * cantidad;
+                    item.querySelector('.subtotal').textContent = `S/.${subtotal.toFixed(2)}`;
+                    total += subtotal;
+                });
+                totalSpan.textContent = total.toFixed(2);
+                totalInput.value = total;
+            }
+
+            agregarProductoBtn.addEventListener('click', function() {
+                const productoItem = document.querySelector('.producto-item').cloneNode(true);
+                productoItem.querySelector('input[type="number"]').value = '';
+                productoItem.querySelector('.subtotal').textContent = 'S/.0.00';
+                productosContainer.appendChild(productoItem);
+
+                // Agregar eventos a los nuevos elementos
+                productoItem.querySelector('select').addEventListener('change', actualizarTotal);
+                productoItem.querySelector('input[type="number"]').addEventListener('input', actualizarTotal);
+            });
+
+            // Agregar eventos iniciales
+            document.querySelectorAll('.producto-item select').forEach(select => {
+                select.addEventListener('change', actualizarTotal);
+            });
+
+            document.querySelectorAll('.producto-item input[type="number"]').forEach(input => {
+                input.addEventListener('input', actualizarTotal);
+            });
+        });
+    </script>
+</body>
+</html> 

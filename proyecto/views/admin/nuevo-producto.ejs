@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nuevo Producto - GameStore</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Agregar Nuevo Producto</h2>
+        <form action="/admin/productos/crear" method="POST" class="product-form">
+            <div class="form-group">
+                <label for="descripcion">Descripción:</label>
+                <input type="text" id="descripcion" name="descripcion" required>
+            </div>
+
+            <div class="form-group">
+                <label for="categoria_id">Categoría:</label>
+                <select id="categoria_id" name="categoria_id" required>
+                    <% categorias.forEach(categoria => { %>
+                        <option value="<%= categoria.categoria_id %>">
+                            <%= categoria.nombre_categoria %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="proveedor_id">Proveedor:</label>
+                <select id="proveedor_id" name="proveedor_id" required>
+                    <% proveedores.forEach(proveedor => { %>
+                        <option value="<%= proveedor.DNI %>">
+                            <%= proveedor.nombre_empresa %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="precio_compra">Precio de Compra:</label>
+                <input type="number" id="precio_compra" name="precio_compra" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="precio_venta">Precio de Venta:</label>
+                <input type="number" id="precio_venta" name="precio_venta" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="marca">Marca:</label>
+                <input type="text" id="marca" name="marca" required>
+            </div>
+
+            <div class="form-group">
+                <label for="stock">Stock:</label>
+                <input type="number" id="stock" name="stock" required>
+            </div>
+
+            <button type="submit" class="submit-btn">Guardar Producto</button>
+            <a href="/admin/productos" class="cancel-btn">Cancelar</a>
+        </form>
+    </div>
+</body>
+</html> 

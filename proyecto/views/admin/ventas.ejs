@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestión de Ventas - GameStore</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <h2>Gestión de Ventas</h2>
+        
+        <a href="/admin/ventas/nueva" class="add-btn">Nueva Venta</a>
+
+        <div class="ventas-list">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID Venta</th>
+                        <th>Cliente</th>
+                        <th>Vendedor</th>
+                        <th>Sucursal</th>
+                        <th>Fecha</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% ventas.forEach(venta => { %>
+                        <tr>
+                            <td><%= venta.venta_id %></td>
+                            <td><%= venta.cliente_nombre %></td>
+                            <td><%= venta.vendedor_dni %></td>
+                            <td><%= venta.sucursal_nombre %></td>
+                            <td><%= new Date(venta.fecha_venta).toLocaleString() %></td>
+                            <td>S/. <%= venta.total_venta %></td>
+                            <td>
+                                <span class="badge <%= venta.estado_venta %>">
+                                    <%= venta.estado_venta %>
+                                </span>
+                            </td>
+                            <td>
+                                <a href="/admin/ventas/ver/<%= venta.venta_id %>" class="btn-view">Ver</a>
+                                <% if (venta.estado_venta === 'pendiente') { %>
+                                    <a href="/admin/ventas/procesar/<%= venta.venta_id %>" class="btn-process">Procesar</a>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+        <a href="/admin-dashboard" class="back-btn">Volver al Panel</a>
+    </div>
+</body>
+</html> 
