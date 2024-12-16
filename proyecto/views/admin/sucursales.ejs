@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestión de Sucursales - Lobito Gamer</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-dashboard">
+        <div class="admin-header">
+            <h2>Gestión de Sucursales</h2>
+            <p>Administra las tiendas gamestore</p>
+        </div>
+
+        <div class="content-wrapper">
+            <!-- Botón para agregar nueva sucursal -->
+            <button class="add-button" onclick="mostrarFormulario()">
+                <i class="fas fa-plus"></i> Nueva Sucursal
+            </button>
+
+            <!-- Formulario para nueva sucursal (oculto por defecto) -->
+            <div id="formularioSucursal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <h3>Nueva Sucursal</h3>
+                    <form action="/admin/sucursales/crear" method="POST" class="store-form">
+                        <div class="form-group">
+                            <label for="nombre">Nombre de la Sucursal:</label>
+                            <input type="text" id="nombre" name="nombre" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="direccion">Dirección:</label>
+                            <input type="text" id="direccion" name="direccion" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="telefono">Teléfono:</label>
+                            <input type="tel" id="telefono" name="telefono" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="horario">Horario:</label>
+                            <input type="text" id="horario" name="horario" placeholder="Ej: 9:00 - 21:00" required>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="submit-btn">Guardar</button>
+                            <button type="button" class="cancel-btn" onclick="ocultarFormulario()">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabla de sucursales -->
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Dirección</th>
+                            <th>Teléfono</th>
+                            <th>Horario</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% sucursales.forEach(sucursal => { %>
+                            <tr>
+                                <td><%= sucursal.sucursal_id %></td>
+                                <td><%= sucursal.nombre %></td>
+                                <td><%= sucursal.direccion %></td>
+                                <td><%= sucursal.telefono %></td>
+                                <td><%= sucursal.horario %></td>
+                                <td>
+                                    <span class="badge <%= sucursal.estado === 'activo' ? 'active' : 'inactive' %>">
+                                        <%= sucursal.estado %>
+                                    </span>
+                                </td>
+                                <td class="actions">
+                                    <button class="edit-btn" onclick="editarSucursal('<%= sucursal.sucursal_id %>')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="delete-btn" onclick="eliminarSucursal('<%= sucursal.sucursal_id %>')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <a href="/admin-dashboard" class="back-button">
+            <i class="fas fa-arrow-left"></i> Volver al Panel
+        </a>
+    </div>
+
+    <script>
+        function mostrarFormulario() {
+            document.getElementById('formularioSucursal').style.display = 'block';
+        }
+
+        function ocultarFormulario() {
+            document.getElementById('formularioSucursal').style.display = 'none';
+        }
+
+        function editarSucursal(id) {
+            // Implementar lógica de edición
+            window.location.href = `/admin/sucursales/editar/${id}`;
+        }
+
+        function eliminarSucursal(id) {
+            if(confirm('¿Estás seguro de que deseas eliminar esta sucursal?')) {
+                window.location.href = `/admin/sucursales/eliminar/${id}`;
+            }
+        }
+    </script>
+</body>
+</html> 

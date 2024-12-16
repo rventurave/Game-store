@@ -1,47 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Panel de Administrador - GameStore</title>
+    <title>Panel de Administrador - Lobito Gamer</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
-    <div class="dashboard-container">
-        <h2>Panel de Administrador - GameStore</h2>
-        <p>Bienvenido, <%= username %></p>
+    <div class="admin-dashboard">
+        <div class="admin-header">
+            <h2>Panel de Administrador - Lobito Gamer</h2>
+            <p>Bienvenido, <%= username %></p>
+        </div>
         
-        <div class="dashboard-menu">
-            <a href="/admin/usuarios" class="menu-item">
+        <div class="admin-grid">
+            <a href="/admin/usuarios" class="admin-card">
+                <div class="admin-icon users">
+                    <i class="fas fa-users"></i>
+                </div>
                 <h3>Gestión de Usuarios</h3>
                 <p>Administrar clientes y empleados</p>
             </a>
             
-            <a href="/admin/productos" class="menu-item">
+            <a href="/admin/productos" class="admin-card">
+                <div class="admin-icon products">
+                    <i class="fas fa-gamepad"></i>
+                </div>
                 <h3>Gestión de Productos</h3>
                 <p>Inventario y catálogo</p>
             </a>
             
-            <a href="/admin/ventas" class="menu-item">
+            <a href="/admin/ventas" class="admin-card">
+                <div class="admin-icon sales">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
                 <h3>Gestión de Ventas</h3>
                 <p>Registro y seguimiento</p>
             </a>
             
-            <a href="/admin/reportes" class="menu-item">
+            <a href="/admin/reportes" class="admin-card">
+                <div class="admin-icon reports">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
                 <h3>Reportes</h3>
                 <p>Estadísticas y análisis</p>
             </a>
             
-            <a href="/admin/sucursales" class="menu-item">
+            <a href="/admin/sucursales" class="admin-card">
+                <div class="admin-icon branches">
+                    <i class="fas fa-store"></i>
+                </div>
                 <h3>Sucursales</h3>
                 <p>Gestión de tiendas</p>
             </a>
             
-            <a href="/admin/mantenimiento" class="menu-item">
+            <a href="/admin/mantenimiento" class="admin-card">
+                <div class="admin-icon service">
+                    <i class="fas fa-tools"></i>
+                </div>
                 <h3>Servicio Técnico</h3>
                 <p>Control de reparaciones</p>
             </a>
         </div>
         
-        <a href="/logout" class="logout-btn">Cerrar sesión</a>
+        <div style="text-align: center;">
+            <a href="/logout" class="admin-logout">
+                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+            </a>
+        </div>
     </div>
 </body>
 </html>

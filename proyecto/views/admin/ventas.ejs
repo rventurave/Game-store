@@ -1,56 +1,122 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Gestión de Ventas - GameStore</title>
+    <title>Gestión de Ventas - Lobito Gamer</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Estilos para los estados de venta */
+        .estado-procesada {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .estado-cancelada {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .estado-pendiente {
+            background-color: #ffc107;
+            color: black;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .btn-view, .btn-print {
+            padding: 5px 10px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-view {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-print {
+            background-color: #6c757d;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <h2>Gestión de Ventas</h2>
+    <div class="admin-container">
+        <h1>Gestión de Ventas</h1>
         
-        <a href="/admin/ventas/nueva" class="add-btn">Nueva Venta</a>
+        <% if (error) { %>
+            <div class="error-message"><%= error %></div>
+        <% } %>
 
-        <div class="ventas-list">
+        <div class="table-container">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th>ID Venta</th>
                         <th>Cliente</th>
-                        <th>Vendedor</th>
+                        <th>Empleado</th>
                         <th>Sucursal</th>
                         <th>Fecha</th>
                         <th>Total</th>
+                        <th>Método Pago</th>
                         <th>Estado</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% ventas.forEach(venta => { %>
+                    <% if (ventas && ventas.length > 0) { %>
+                        <% ventas.forEach(venta => { %>
+                            <tr>
+                                <td><%= venta.venta_id %></td>
+                                <td><%= venta.nombre_cliente %></td>
+                                <td><%= venta.nombre_empleado %></td>
+                                <td><%= venta.nombre_sucursal %></td>
+                                <td><%= new Date(venta.fecha_venta).toLocaleString() %></td>
+                                <td>S/. <%= typeof venta.total_venta === 'number' ? venta.total_venta.toFixed(2) : parseFloat(venta.total_venta || 0).toFixed(2) %></td>
+                                <td><%= venta.metodo_pago %></td>
+                                <td>
+                                    <span class="estado-<%= venta.estado_venta.toLowerCase() %>">
+                                        <%= venta.estado_venta %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <button onclick="verDetalle('<%= venta.venta_id %>')" class="btn-view">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="imprimirBoleta('<%= venta.venta_id %>')" class="btn-print">
+                                        <i class="fas fa-print"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
                         <tr>
-                            <td><%= venta.venta_id %></td>
-                            <td><%= venta.cliente_nombre %></td>
-                            <td><%= venta.vendedor_dni %></td>
-                            <td><%= venta.sucursal_nombre %></td>
-                            <td><%= new Date(venta.fecha_venta).toLocaleString() %></td>
-                            <td>S/. <%= venta.total_venta %></td>
-                            <td>
-                                <span class="badge <%= venta.estado_venta %>">
-                                    <%= venta.estado_venta %>
-                                </span>
-                            </td>
-                            <td>
-                                <a href="/admin/ventas/ver/<%= venta.venta_id %>" class="btn-view">Ver</a>
-                                <% if (venta.estado_venta === 'pendiente') { %>
-                                    <a href="/admin/ventas/procesar/<%= venta.venta_id %>" class="btn-process">Procesar</a>
-                                <% } %>
-                            </td>
+                            <td colspan="9" class="text-center">No hay ventas registradas</td>
                         </tr>
-                    <% }); %>
+                    <% } %>
                 </tbody>
             </table>
         </div>
 
-        <a href="/admin-dashboard" class="back-btn">Volver al Panel</a>
+        <div class="actions">
+            <a href="/admin/ventas/nueva" class="btn-primary">Nueva Venta</a>
+            <a href="/admin-dashboard" class="btn-secondary">Volver al Panel</a>
+        </div>
     </div>
+
+    <script>
+        function verDetalle(id) {
+            window.location.href = `/admin/ventas/detalle/${id}`;
+        }
+        
+        function imprimirBoleta(id) {
+            window.open(`/admin/ventas/boleta/${id}`, '_blank');
+        }
+    </script>
 </body>
 </html> 

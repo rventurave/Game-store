@@ -38,72 +38,84 @@ app.post('/auth/register', async (req, res) => {
         email, 
         celular, 
         genero, 
-        password,
-        confirm_password 
+        password 
     } = req.body;
 
-    // Validar que las contraseñas coincidan
-    if (password !== confirm_password) {
-        return res.send('Las contraseñas no coinciden');
-    }
-
     try {
-        // Verificar si el DNI ya existe
-        connection.query('SELECT DNI FROM Persona WHERE DNI = ?', [DNI], async (error, results) => {
-            if (error) {
-                console.error('Error al verificar DNI:', error);
-                return res.send('Error en el registro');
-            }
+        // Validaciones básicas
+        if (!DNI || DNI.length !== 8) {
+            throw new Error('El DNI debe tener 8 dígitos');
+        }
 
-            if (results.length > 0) {
-                return res.send('El DNI ya está registrado');
-            }
+        if (!celular || celular.length !== 9) {
+            throw new Error('El celular debe tener 9 dígitos');
+        }
 
-            // Hash de la contraseña
-            const hashedPassword = await bcrypt.hash(password, 10);
+        if (!['M', 'F', 'Otro'].includes(genero)) {
+            throw new Error('Género no válido. Debe ser M, F u Otro');
+        }
 
-            // Insertar en la tabla Persona
-            connection.query(
-                'INSERT INTO Persona (DNI, celular, nombre, email, apellido_p, apellido_m, genero) VALUES (?, ?, ?, ?, ?, ?, ?)',
-                [DNI, celular, nombre, email, apellido_p, apellido_m, genero],
-                (error, results) => {
-                    if (error) {
-                        console.error('Error al insertar en Persona:', error);
-                        return res.send('Error al registrar usuario');
-                    }
+        // Validar que todos los campos requeridos estén presentes
+        if (!nombre || !apellido_p || !apellido_m || !email || !password) {
+            throw new Error('Todos los campos son obligatorios');
+        }
 
-                    // Insertar en la tabla Clientes
-                    connection.query(
-                        'INSERT INTO Clientes (DNI) VALUES (?)',
-                        [DNI],
-                        (error, results) => {
-                            if (error) {
-                                console.error('Error al insertar en Clientes:', error);
-                                return res.send('Error al registrar cliente');
-                            }
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            throw new Error('Formato de email no válido');
+        }
 
-                            // Insertar credenciales en la tabla users
-                            connection.query(
-                                'INSERT INTO users (DNI, password) VALUES (?, ?)',
-                                [DNI, hashedPassword],
-                                (error, results) => {
-                                    if (error) {
-                                        console.error('Error al guardar credenciales:', error);
-                                        return res.send('Error al guardar credenciales');
-                                    }
+        // Hash de la contraseña antes de enviarla al procedimiento
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-                                    // Registro exitoso
-                                    res.redirect('/client-login');
-                                }
-                            );
-                        }
-                    );
-                }
-            );
-        });
+        // Llamar al procedimiento almacenado
+        await connection.promise().query(
+            'CALL sp_registrar_cliente(?, ?, ?, ?, ?, ?, ?, ?)',
+            [
+                DNI,
+                nombre,
+                apellido_p,
+                apellido_m,
+                email,
+                celular,
+                genero,
+                hashedPassword // Enviamos la contraseña hasheada
+            ]
+        );
+
+        // Si llegamos aquí, el registro fue exitoso
+        req.flash('success', 'Registro exitoso. Por favor inicia sesión.');
+        res.redirect('/client-login');
+
     } catch (error) {
-        console.error('Error en el proceso de registro:', error);
-        res.send('Error en el proceso de registro');
+        console.error('Error en el registro:', error);
+        
+        let mensajeError = error.message;
+        
+        // Manejar errores específicos del procedimiento almacenado
+        if (error.sqlMessage) {
+            mensajeError = error.sqlMessage;
+        }
+
+        // Si el error es del procedimiento almacenado (código 45000)
+        if (error.sqlState === '45000') {
+            mensajeError = error.sqlMessage;
+        }
+
+        // Renderizar la página de registro con el error y mantener los datos del formulario
+        res.render('register', { 
+            error: mensajeError,
+            formData: {
+                DNI,
+                nombre,
+                apellido_p,
+                apellido_m,
+                email,
+                celular,
+                genero
+            }
+        });
     }
 });
 
@@ -142,9 +154,35 @@ app.post('/auth/login', (req, res) => {
 
 app.get('/client-dashboard', (req, res) => {
     if (req.session.loggedin && req.session.tipo === 'cliente') {
-        res.render('client-dashboard', { 
-            nombre: req.session.nombre,
-            DNI: req.session.DNI 
+        // Obtener productos y categorías de la base de datos
+        Promise.all([
+            new Promise((resolve, reject) => {
+                connection.query(
+                    `SELECT p.*, c.nombre_categoria
+                     FROM Productos p 
+                     LEFT JOIN Categorias c ON p.categoria_id = c.categoria_id
+                     WHERE p.stock > 0`,
+                    (error, productos) => {
+                        if (error) reject(error);
+                        resolve(productos);
+                    }
+                );
+            }),
+            new Promise((resolve, reject) => {
+                connection.query('SELECT * FROM Categorias', (error, categorias) => {
+                    if (error) reject(error);
+                    resolve(categorias);
+                });
+            })
+        ]).then(([productos, categorias]) => {
+            res.render('tienda', {
+                nombre: req.session.nombre,
+                productos: productos,
+                categorias: categorias
+            });
+        }).catch(error => {
+            console.error('Error:', error);
+            res.send('Error al cargar la tienda');
         });
     } else {
         res.redirect('/client-login');
@@ -182,366 +220,237 @@ app.get('/admin-dashboard', (req, res) => {
     }
 });
 
-// Ruta para ver todos los usuarios
-app.get('/admin/usuarios', (req, res) => {
-    if (req.session.isAdmin) {
-        connection.query(
-            'SELECT p.*, ' +
-            'CASE WHEN c.DNI IS NOT NULL THEN "Cliente" ' +
-            'WHEN e.DNI IS NOT NULL THEN "Empleado" END AS tipo ' +
-            'FROM Persona p ' +
-            'LEFT JOIN Clientes c ON p.DNI = c.DNI ' +
-            'LEFT JOIN Empleados e ON p.DNI = e.DNI',
-            (error, results) => {
-                if (error) {
-                    console.error('Error:', error);
-                    res.send('Error al obtener usuarios');
-                    return;
-                }
-                res.render('admin/usuarios', { usuarios: results });
-            }
-        );
-    } else {
-        res.redirect('/');
-    }
-});
+// Rutas del Panel de Administrador
 
-// Ruta para ver productos
-app.get('/admin/productos', (req, res) => {
-    if (req.session.isAdmin) {
-        connection.query(
-            'SELECT p.*, c.nombre_categoria, pr.nombre_empresa as proveedor ' +
-            'FROM Productos p ' +
-            'LEFT JOIN Categorias c ON p.categoria_id = c.categoria_id ' +
-            'LEFT JOIN Proveedores pr ON p.proveedor_id = pr.DNI',
-            (error, results) => {
-                if (error) {
-                    console.error('Error:', error);
-                    res.send('Error al obtener productos');
-                    return;
-                }
-                res.render('admin/productos', { productos: results });
-            }
-        );
-    } else {
-        res.redirect('/');
-    }
-});
-
-// Ruta para ver todas las ventas
-app.get('/admin/ventas', (req, res) => {
-    if (!req.session.isAdmin) {
-        return res.redirect('/');
-    }
-
-    connection.query(
-        `SELECT v.*, 
-         p.nombre as cliente_nombre,
-         e.DNI as vendedor_dni,
-         s.nombre as sucursal_nombre,
-         (SELECT SUM(dv.cantidad) FROM Detalles_Venta dv WHERE dv.venta_id = v.venta_id) as total_productos
-         FROM Ventas v
-         JOIN Persona p ON v.cliente_id = p.DNI
-         JOIN Empleados e ON v.empleado_id = e.DNI
-         JOIN Sucursales s ON v.sucursal_id = s.sucursal_id
-         ORDER BY v.fecha_venta DESC`,
-        (error, ventas) => {
-            if (error) {
-                console.error('Error:', error);
-                return res.send('Error al obtener ventas');
-            }
-            res.render('admin/ventas', { ventas });
-        }
-    );
-});
-
-// Ruta para mostrar el formulario de nueva venta
-app.get('/admin/ventas/nueva', (req, res) => {
-    if (!req.session.isAdmin) {
-        return res.redirect('/');
-    }
-
-    Promise.all([
-        // Obtener clientes
-        new Promise((resolve, reject) => {
-            connection.query(
-                'SELECT p.DNI, p.nombre, p.apellido_p FROM Persona p JOIN Clientes c ON p.DNI = c.DNI',
-                (error, results) => {
-                    if (error) reject(error);
-                    resolve(results);
-                }
-            );
-        }),
-        // Obtener empleados
-        new Promise((resolve, reject) => {
-            connection.query(
-                'SELECT p.DNI, p.nombre, p.apellido_p FROM Persona p JOIN Empleados e ON p.DNI = e.DNI',
-                (error, results) => {
-                    if (error) reject(error);
-                    resolve(results);
-                }
-            );
-        }),
-        // Obtener sucursales
-        new Promise((resolve, reject) => {
-            connection.query(
-                'SELECT * FROM Sucursales',
-                (error, results) => {
-                    if (error) reject(error);
-                    resolve(results);
-                }
-            );
-        }),
-        // Obtener productos
-        new Promise((resolve, reject) => {
-            connection.query(
-                'SELECT * FROM Productos WHERE stock > 0',
-                (error, results) => {
-                    if (error) reject(error);
-                    resolve(results);
-                }
-            );
-        })
-    ]).then(([clientes, empleados, sucursales, productos]) => {
-        res.render('admin/nueva-venta', {
-            clientes,
-            empleados,
-            sucursales,
-            productos
+// 1. Gestión de Usuarios
+app.get('/admin/usuarios', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        const [result] = await connection.promise().query('CALL sp_listar_usuarios()');
+        res.render('admin/usuarios', { 
+            usuarios: result[0],
+            username: req.session.username 
         });
-    }).catch(error => {
+    } catch (error) {
         console.error('Error:', error);
-        res.send('Error al cargar el formulario de venta');
-    });
+        res.status(500).send('Error al cargar usuarios');
+    }
 });
 
-// Ruta para procesar nueva venta
-app.post('/admin/ventas/crear', (req, res) => {
-    if (!req.session.isAdmin) {
-        return res.redirect('/');
-    }
-
-    const {
-        cliente_id,
-        empleado_id,
-        sucursal_id,
-        productos,
-        cantidades,
-        total_venta,
-        metodo_pago
-    } = req.body;
-
-    // Iniciar transacción
-    connection.beginTransaction(err => {
-        if (err) {
-            return res.status(500).json({ error: 'Error al iniciar la transacción' });
-        }
-
-        // Insertar la venta
-        connection.query(
-            'INSERT INTO Ventas (cliente_id, empleado_id, sucursal_id, total_venta, metodo_pago, estado_venta) VALUES (?, ?, ?, ?, ?, "procesada")',
-            [cliente_id, empleado_id, sucursal_id, total_venta, metodo_pago],
-            (error, results) => {
-                if (error) {
-                    return connection.rollback(() => {
-                        res.status(500).json({ error: 'Error al crear la venta' });
-                    });
-                }
-
-                const venta_id = results.insertId;
-                const detalles = [];
-
-                // Preparar detalles de venta
-                for (let i = 0; i < productos.length; i++) {
-                    detalles.push([
-                        venta_id,
-                        productos[i],
-                        cantidades[i],
-                        // Aquí deberías obtener el precio actual del producto
-                        0, // precio_unitario (se actualizará en la siguiente consulta)
-                        0  // subtotal (se actualizará en la siguiente consulta)
-                    ]);
-                }
-
-                // Insertar detalles de venta
-                connection.query(
-                    'INSERT INTO Detalles_Venta (venta_id, producto_id, cantidad, precio_unitario, subtotal) VALUES ?',
-                    [detalles],
-                    (error) => {
-                        if (error) {
-                            return connection.rollback(() => {
-                                res.status(500).json({ error: 'Error al crear los detalles de la venta' });
-                            });
-                        }
-
-                        // Actualizar stock
-                        const actualizaciones = productos.map((producto_id, index) => {
-                            return new Promise((resolve, reject) => {
-                                connection.query(
-                                    'UPDATE Productos SET stock = stock - ? WHERE producto_id = ?',
-                                    [cantidades[index], producto_id],
-                                    (error) => {
-                                        if (error) reject(error);
-                                        resolve();
-                                    }
-                                );
-                            });
-                        });
-
-                        Promise.all(actualizaciones)
-                            .then(() => {
-                                connection.commit(err => {
-                                    if (err) {
-                                        return connection.rollback(() => {
-                                            res.status(500).json({ error: 'Error al finalizar la venta' });
-                                        });
-                                    }
-                                    res.redirect('/admin/ventas');
-                                });
-                            })
-                            .catch(error => {
-                                connection.rollback(() => {
-                                    res.status(500).json({ error: 'Error al actualizar el stock' });
-                                });
-                            });
-                    }
-                );
-            }
+app.post('/admin/empleados/agregar', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        const { DNI, nombre, apellido_p, apellido_m, email, celular, genero, cargo, salario } = req.body;
+        
+        await connection.promise().query(
+            'CALL sp_agregar_empleado(?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [DNI, nombre, apellido_p, apellido_m, email, celular, genero, cargo, salario]
         );
-    });
-});
-
-// Ruta para mostrar el formulario de nuevo producto
-app.get('/admin/productos/nuevo', (req, res) => {
-    if (!req.session.isAdmin) {
-        return res.redirect('/');
-    }
-
-    // Obtener categorías y proveedores para los selectores
-    Promise.all([
-        new Promise((resolve, reject) => {
-            connection.query('SELECT * FROM Categorias', (error, results) => {
-                if (error) reject(error);
-                resolve(results);
-            });
-        }),
-        new Promise((resolve, reject) => {
-            connection.query('SELECT * FROM Proveedores', (error, results) => {
-                if (error) reject(error);
-                resolve(results);
-            });
-        })
-    ]).then(([categorias, proveedores]) => {
-        res.render('admin/nuevo-producto', { categorias, proveedores });
-    }).catch(error => {
+        
+        res.redirect('/admin/usuarios');
+    } catch (error) {
         console.error('Error:', error);
-        res.send('Error al cargar el formulario');
-    });
+        res.status(500).send('Error al agregar empleado');
+    }
 });
 
-// Ruta para procesar la creación del producto
-app.post('/admin/productos/crear', (req, res) => {
-    if (!req.session.isAdmin) {
-        return res.redirect('/');
+// 2. Gestión de Productos
+app.get('/admin/productos', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        const [result] = await connection.promise().query('CALL sp_listar_productos()');
+        res.render('admin/productos', { 
+            productos: result[0],
+            username: req.session.username 
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Error al cargar productos');
     }
-
-    const {
-        descripcion,
-        categoria_id,
-        proveedor_id,
-        precio_compra,
-        precio_venta,
-        marca,
-        stock
-    } = req.body;
-
-    connection.query(
-        'INSERT INTO Productos (descripcion, categoria_id, proveedor_id, precio_compra, precio_venta, marca, stock) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [descripcion, categoria_id, proveedor_id, precio_compra, precio_venta, marca, stock],
-        (error, results) => {
-            if (error) {
-                console.error('Error al insertar producto:', error);
-                res.send('Error al crear el producto');
-                return;
-            }
-            res.redirect('/admin/productos');
-        }
-    );
 });
 
-// Ruta principal de reportes
-app.get('/admin/reportes', (req, res) => {
-    if (!req.session.isAdmin) {
-        return res.redirect('/');
+app.post('/admin/productos/agregar', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        const { nombre, descripcion, precio, stock, categoria } = req.body;
+        
+        await connection.promise().query(
+            'CALL sp_agregar_producto(?, ?, ?, ?, ?)',
+            [nombre, descripcion, precio, stock, categoria]
+        );
+        
+        res.redirect('/admin/productos');
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Error al agregar producto');
     }
+});
 
-    Promise.all([
-        // Reporte de ventas totales
-        new Promise((resolve, reject) => {
-            connection.query(
-                'SELECT SUM(total_venta) as ventas_totales FROM Ventas WHERE MONTH(fecha_venta) = MONTH(CURRENT_DATE())',
-                (error, results) => {
-                    if (error) reject(error);
-                    resolve(results[0]);
-                }
-            );
-        }),
-        // Productos más vendidos
-        new Promise((resolve, reject) => {
-            connection.query(
-                `SELECT p.producto_id, p.descripcion, p.marca, 
-                 SUM(dv.cantidad) as total_vendido,
-                 SUM(dv.subtotal) as ingresos_totales
-                 FROM Productos p
-                 JOIN Detalles_Venta dv ON p.producto_id = dv.producto_id
-                 GROUP BY p.producto_id
-                 ORDER BY total_vendido DESC
-                 LIMIT 5`,
-                (error, results) => {
-                    if (error) reject(error);
-                    resolve(results);
-                }
-            );
-        }),
-        // Stock bajo
-        new Promise((resolve, reject) => {
-            connection.query(
-                'SELECT * FROM Productos WHERE stock < 10 ORDER BY stock ASC',
-                (error, results) => {
-                    if (error) reject(error);
-                    resolve(results);
-                }
-            );
-        }),
-        // Ventas por sucursal
-        new Promise((resolve, reject) => {
-            connection.query(
-                `SELECT s.nombre, COUNT(v.venta_id) as total_ventas, 
-                 SUM(v.total_venta) as ingresos
-                 FROM Sucursales s
-                 LEFT JOIN Ventas v ON s.sucursal_id = v.sucursal_id
-                 GROUP BY s.sucursal_id`,
-                (error, results) => {
-                    if (error) reject(error);
-                    resolve(results);
-                }
-            );
-        })
-    ]).then(([ventasTotales, productosPopulares, stockBajo, ventasPorSucursal]) => {
+// 3. Gestión de Ventas
+app.get('/admin/ventas', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        
+        // Ejecutar el procedimiento almacenado
+        const [results] = await connection.promise().query('CALL sp_listar_ventas()');
+        
+        // Para depuración
+        console.log('Resultados de ventas:', results[0]);
+        
+        res.render('admin/ventas', { 
+            ventas: results[0] || [],
+            username: req.session.username,
+            error: null
+        });
+        
+    } catch (error) {
+        console.error('Error al cargar ventas:', error);
+        res.render('admin/ventas', {
+            ventas: [],
+            username: req.session.username,
+            error: 'Error al cargar las ventas: ' + error.message
+        });
+    }
+});
+
+app.post('/admin/ventas/registrar', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        
+        const { cliente_dni, producto_id, cantidad } = req.body;
+        await connection.promise().query(
+            'CALL sp_registrar_venta(?, ?, ?, ?)',
+            [cliente_dni, req.session.DNI, producto_id, cantidad]
+        );
+        
+        res.redirect('/admin/ventas');
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Error al registrar venta');
+    }
+});
+
+// 4. Reportes
+app.get('/admin/reportes', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        
+        const fechaFin = new Date();
+        const fechaInicio = new Date(Date.now() - 30*24*60*60*1000); // 30 días atrás
+        
+        // Obtener reportes
+        const [results] = await connection.promise().query(
+            'CALL sp_reporte_ventas_periodo(?, ?)',
+            [fechaInicio, fechaFin]
+        );
+
+        // Los resultados vienen en múltiples conjuntos de datos
+        const ventasPorPeriodo = results[0] || [];
+        const productosMasVendidos = results[1] || [];
+        const resumenGeneral = results[2]?.[0] || {
+            total_ventas: 0,
+            total_clientes: 0,
+            monto_total_periodo: 0,
+            ticket_promedio: 0
+        };
+
         res.render('admin/reportes', {
-            ventasTotales,
-            productosPopulares,
-            stockBajo,
-            ventasPorSucursal
+            ventasPeriodo: ventasPorPeriodo,
+            productosVendidos: productosMasVendidos,
+            totalVentas: resumenGeneral.monto_total_periodo || 0,
+            totalProductos: productosMasVendidos.reduce((sum, p) => sum + p.unidades_vendidas, 0),
+            totalClientes: resumenGeneral.total_clientes || 0,
+            username: req.session.username
         });
-    }).catch(error => {
-        console.error('Error en reportes:', error);
-        res.send('Error al generar reportes');
-    });
+
+    } catch (error) {
+        console.error('Error al cargar reportes:', error);
+        res.render('admin/reportes', {
+            ventasPeriodo: [],
+            productosVendidos: [],
+            totalVentas: 0,
+            totalProductos: 0,
+            totalClientes: 0,
+            username: req.session.username,
+            error: 'Error al cargar los reportes: ' + error.message
+        });
+    }
+});
+
+// 5. Sucursales
+app.get('/admin/sucursales', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        const [result] = await connection.promise().query('CALL sp_listar_sucursales()');
+        res.render('admin/sucursales', { 
+            sucursales: result[0],
+            username: req.session.username 
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Error al cargar sucursales');
+    }
+});
+
+app.post('/admin/sucursales/agregar', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        const { nombre, direccion, telefono } = req.body;
+        
+        await connection.promise().query(
+            'CALL sp_agregar_sucursal(?, ?, ?)',
+            [nombre, direccion, telefono]
+        );
+        
+        res.redirect('/admin/sucursales');
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Error al agregar sucursal');
+    }
+});
+
+// 6. Servicio Técnico
+app.get('/admin/servicio-tecnico', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        const [result] = await connection.promise().query('CALL sp_listar_reparaciones()');
+        res.render('admin/servicio-tecnico', { 
+            reparaciones: result[0],
+            username: req.session.username 
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Error al cargar reparaciones');
+    }
+});
+
+app.post('/admin/reparaciones/registrar', async (req, res) => {
+    try {
+        if (!req.session.isAdmin) return res.redirect('/');
+        const { cliente_dni, descripcion, costo } = req.body;
+        
+        await connection.promise().query(
+            'CALL sp_registrar_reparacion(?, ?, ?)',
+            [cliente_dni, descripcion, costo]
+        );
+        
+        res.redirect('/admin/servicio-tecnico');
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).send('Error al registrar reparación');
+    }
+});
+
+// Ruta principal del panel de administrador
+app.get('/admin-dashboard', (req, res) => {
+    if (!req.session.isAdmin) {
+        return res.redirect('/');
+    }
+    res.render('admin-dashboard', { username: req.session.username });
 });
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+app.listen(3001, () => {
     console.log(`Servidor corriendo en puerto ${PORT}`);
 });

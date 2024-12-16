@@ -1,19 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login Administrador</title>
+    <title>Login Administrador - Lobito Gamer</title>
     <link rel="stylesheet" href="/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-    <div class="login-container">
-        <h2>Login Administrador</h2>
-        <form action="/auth/admin-login" method="POST">
-            <input type="text" name="username" placeholder="Usuario MySQL (root)" required>
-            <input type="password" name="password" placeholder="Contraseña MySQL" required>
-            <button type="submit">Acceder como Administrador</button>
-        </form>
-        <p>¿Eres cliente? <a href="/client-login">Acceso Clientes</a></p>
-        <p>¿No tienes cuenta? <a href="/register">Regístrate</a></p>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">Lobito Gamer</div>
+                <p class="auth-subtitle">Panel de Administración</p>
+            </div>
+
+            <form action="/auth/admin-login" method="POST" class="auth-form">
+                <div class="form-group">
+                    <input type="text" name="username" placeholder="Usuario MySQL (root)" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" name="password" placeholder="Contraseña MySQL" required>
+                </div>
+
+                <button type="submit" class="auth-button">
+                    Acceder como Administrador
+                </button>
+            </form>
+
+            <div class="auth-separator">
+                <span>o</span>
+            </div>
+
+            <div class="auth-links">
+                <p>¿Eres cliente? <a href="/client-login">Acceso Clientes</a></p>
+                <p>¿No tienes cuenta? <a href="/register">Regístrate</a></p>
+            </div>
+        </div>
     </div>
 </body>
 </html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>gamestore - Tienda de Videojuegos</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="store-nav">
+        <div class="nav-content">
+            <h1>gamestore</h1>
+            <div class="user-info">
+                <span>Bienvenido, <%= nombre %></span>
+                <a href="/logout" class="logout-btn">Cerrar sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="store-container">
+        <aside class="filters">
+            <h3>Filtros</h3>
+            <div class="filter-section">
+                <h4>Categorías</h4>
+                <select id="categoria-filter">
+                    <option value="">Todas las categorías</option>
+                    <% categorias.forEach(categoria => { %>
+                        <option value="<%= categoria.categoria_id %>">
+                            <%= categoria.nombre_categoria %>
+                        </option>
+                    <% }); %>
+                </select>
+            </div>
+        </aside>
+
+        <main class="products-grid">
+            <% productos.forEach(producto => { %>
+                <div class="product-card">
+                    <img src="/images/games/<%= producto.imagen || 'default.jpg' %>" 
+                         alt="<%= producto.descripcion %>"
+                         onerror="this.src='/images/games/default.jpg'">
+                    <div class="product-info">
+                        <h3><%= producto.descripcion %></h3>
+                        <p class="brand">Marca: <%= producto.marca %></p>
+                        <p class="price">S/. <%= producto.precio_venta %></p>
+                        
+                        <div class="product-actions">
+                            <button class="add-to-cart" data-id="<%= producto.producto_id %>">
+                                Agregar al carrito
+                            </button>
+                            <button class="view-details" data-id="<%= producto.producto_id %>">
+                                Ver detalles
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </main>
+    </div>
+
+    <script>
+        document.querySelectorAll('.view-details').forEach(button => {
+            button.addEventListener('click', function() {
+                const productoId = this.dataset.id;
+                window.location.href = `/producto/${productoId}`;
+            });
+        });
+
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function() {
+                const productoId = this.dataset.id;
+                alert('Producto agregado al carrito');
+            });
+        });
+    </script>
+</body>
+</html>

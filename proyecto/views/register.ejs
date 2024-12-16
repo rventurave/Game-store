@@ -1,34 +1,73 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Registro de Cliente</title>
+    <title>Registro - gamestore</title>
     <link rel="stylesheet" href="/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
-    <div class="login-container">
-        <h2>Registro de Cliente</h2>
-        <form action="/auth/register" method="POST">
-            <!-- Datos de la tabla Persona -->
-            <input type="number" name="DNI" placeholder="DNI" required>
-            <input type="text" name="nombre" placeholder="Nombre" required>
-            <input type="text" name="apellido_p" placeholder="Apellido Paterno" required>
-            <input type="text" name="apellido_m" placeholder="Apellido Materno" required>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="tel" name="celular" placeholder="Celular" required>
-            <select name="genero" required>
-                <option value="">Seleccione Género</option>
-                <option value="M">Masculino</option>
-                <option value="F">Femenino</option>
-                <option value="Otro">Otro</option>
-            </select>
-            
-            <!-- Contraseña para autenticación -->
-            <input type="password" name="password" placeholder="Contraseña" required>
-            <input type="password" name="confirm_password" placeholder="Confirmar Contraseña" required>
-            
-            <button type="submit">Registrar Cliente</button>
-        </form>
-        <p>¿Ya tienes cuenta? <a href="/client-login">Iniciar Sesión</a></p>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">Lobito Gamer</div>
+                <p class="auth-subtitle">Registro de Cliente</p>
+            </div>
+
+            <form action="/auth/register" method="POST" class="auth-form">
+                <% if (typeof error !== 'undefined') { %>
+                    <div class="auth-error"><%= error %></div>
+                <% } %>
+
+                <div class="form-group">
+                    <input type="text" name="DNI" placeholder="DNI" 
+                           value="<%= typeof formData !== 'undefined' ? formData.DNI : '' %>" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="text" name="nombre" placeholder="Nombre" 
+                           value="<%= typeof formData !== 'undefined' ? formData.nombre : '' %>" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="text" name="apellido_p" placeholder="Apellido Paterno" 
+                           value="<%= typeof formData !== 'undefined' ? formData.apellido_p : '' %>" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="text" name="apellido_m" placeholder="Apellido Materno" 
+                           value="<%= typeof formData !== 'undefined' ? formData.apellido_m : '' %>" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="email" name="email" placeholder="Email" 
+                           value="<%= typeof formData !== 'undefined' ? formData.email : '' %>" required>
+                </div>
+                
+                <div class="form-group">
+                    <input type="tel" name="celular" placeholder="Celular" 
+                           value="<%= typeof formData !== 'undefined' ? formData.celular : '' %>" required>
+                </div>
+                
+                <div class="form-group">
+                    <select name="genero" required>
+                        <option value="">Seleccione Género</option>
+                        <option value="M" <%= typeof formData !== 'undefined' && formData.genero === 'M' ? 'selected' : '' %>>Masculino</option>
+                        <option value="F" <%= typeof formData !== 'undefined' && formData.genero === 'F' ? 'selected' : '' %>>Femenino</option>
+                        <option value="Otro" <%= typeof formData !== 'undefined' && formData.genero === 'Otro' ? 'selected' : '' %>>Otro</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <input type="password" name="password" placeholder="Contraseña" required>
+                </div>
+                
+                <button type="submit" class="auth-button">Registrar Cliente</button>
+            </form>
+
+            <div class="auth-links">
+                <p>¿Ya tienes cuenta? <a href="/client-login">Iniciar Sesión</a></p>
+            </div>
+        </div>
     </div>
 </body>
 </html>

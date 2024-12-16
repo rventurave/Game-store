@@ -5,7 +5,13 @@ const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: 'clay7',
-    database: 'gamestore'
+    database: 'gamestore',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    connectTimeout: 60000,
+    acquireTimeout: 60000,
+    timeout: 60000
 });
 
 // Conectar a la base de datos

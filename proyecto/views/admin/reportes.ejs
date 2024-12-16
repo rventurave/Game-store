@@ -1,100 +1,161 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Reportes - GameStore</title>
+    <title>Reportes - Lobito Gamer</title>
     <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="dashboard-container">
-        <h2>Panel de Reportes</h2>
+    <div class="admin-dashboard">
+        <div class="admin-header">
+            <h2>Reportes y Estadísticas</h2>
+            <p>Análisis de ventas y productos</p>
+        </div>
 
-        <!-- Resumen General -->
-        <div class="report-summary">
-            <div class="summary-card">
-                <h3>Ventas del Mes</h3>
-                <p class="amount">S/. <%= ventasTotales.ventas_totales || 0 %></p>
+        <div class="content-wrapper">
+            <!-- Filtros de fecha -->
+            <div class="filters-section">
+                <form id="reportForm" class="date-filters">
+                    <div class="form-group">
+                        <label for="fecha_inicio">Fecha Inicio:</label>
+                        <input type="date" id="fecha_inicio" name="fecha_inicio">
+                    </div>
+                    <div class="form-group">
+                        <label for="fecha_fin">Fecha Fin:</label>
+                        <input type="date" id="fecha_fin" name="fecha_fin">
+                    </div>
+                    <button type="submit" class="filter-btn">
+                        <i class="fas fa-filter"></i> Filtrar
+                    </button>
+                </form>
+            </div>
+
+            <!-- Resumen de ventas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Ventas</h3>
+                    <p class="stat-number">S/. <%= totalVentas.toFixed(2) %></p>
+                </div>
+                <div class="stat-card">
+                    <h3>Productos Vendidos</h3>
+                    <p class="stat-number"><%= totalProductos %></p>
+                </div>
+                <div class="stat-card">
+                    <h3>Clientes Atendidos</h3>
+                    <p class="stat-number"><%= totalClientes %></p>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>Ventas por Período</h3>
+                    <canvas id="ventasChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Métodos de Pago</h3>
+                    <canvas id="metodoPagoChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tabla de productos más vendidos -->
+            <div class="table-container">
+                <h3>Top Productos Vendidos</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Unidades Vendidas</th>
+                            <th>Total Generado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% productosVendidos.forEach(producto => { %>
+                            <tr>
+                                <td><%= producto.nombre_producto %></td>
+                                <td><%= producto.unidades_vendidas %></td>
+                                <td>S/. <%= producto.total_generado.toFixed(2) %></td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Productos Más Vendidos -->
-        <div class="report-section">
-            <h3>Top 5 Productos Más Vendidos</h3>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Marca</th>
-                        <th>Cantidad Vendida</th>
-                        <th>Ingresos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% productosPopulares.forEach(producto => { %>
-                        <tr>
-                            <td><%= producto.descripcion %></td>
-                            <td><%= producto.marca %></td>
-                            <td><%= producto.total_vendido %></td>
-                            <td>S/. <%= producto.ingresos_totales %></td>
-                        </tr>
-                    <% }); %>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Alerta de Stock -->
-        <div class="report-section">
-            <h3>Productos con Stock Bajo</h3>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Producto</th>
-                        <th>Stock Actual</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% stockBajo.forEach(producto => { %>
-                        <tr class="<%= producto.stock < 5 ? 'stock-critical' : 'stock-warning' %>">
-                            <td><%= producto.descripcion %></td>
-                            <td><%= producto.stock %></td>
-                            <td>
-                                <% if(producto.stock < 5) { %>
-                                    <span class="badge critical">Crítico</span>
-                                <% } else { %>
-                                    <span class="badge warning">Bajo</span>
-                                <% } %>
-                            </td>
-                        </tr>
-                    <% }); %>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Ventas por Sucursal -->
-        <div class="report-section">
-            <h3>Rendimiento por Sucursal</h3>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Sucursal</th>
-                        <th>Total Ventas</th>
-                        <th>Ingresos</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% ventasPorSucursal.forEach(sucursal => { %>
-                        <tr>
-                            <td><%= sucursal.nombre %></td>
-                            <td><%= sucursal.total_ventas %></td>
-                            <td>S/. <%= sucursal.ingresos || 0 %></td>
-                        </tr>
-                    <% }); %>
-                </tbody>
-            </table>
-        </div>
-
-        <a href="/admin-dashboard" class="back-btn">Volver al Panel</a>
+        <a href="/admin-dashboard" class="back-button">
+            <i class="fas fa-arrow-left"></i> Volver al Panel
+        </a>
     </div>
+
+    <script>
+        // Configuración de gráficos
+        const ventasPeriodo = <%- JSON.stringify(ventasPeriodo) %>;
+
+        // Gráfico de ventas por período
+        new Chart(document.getElementById('ventasChart'), {
+            type: 'line',
+            data: {
+                labels: ventasPeriodo.map(v => new Date(v.fecha).toLocaleDateString()),
+                datasets: [{
+                    label: 'Ventas Diarias',
+                    data: ventasPeriodo.map(v => v.monto_total),
+                    borderColor: '#1a237e',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'S/. ' + value.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de métodos de pago
+        const metodoPagoData = ventasPeriodo.reduce((acc, v) => {
+            if (!acc[v.metodo_pago]) {
+                acc[v.metodo_pago] = 0;
+            }
+            acc[v.metodo_pago] += v.cantidad_ventas;
+            return acc;
+        }, {});
+
+        new Chart(document.getElementById('metodoPagoChart'), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(metodoPagoData),
+                datasets: [{
+                    data: Object.values(metodoPagoData),
+                    backgroundColor: ['#1a237e', '#311b92', '#4a148c']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Manejo del formulario de filtros
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fechaInicio = document.getElementById('fecha_inicio').value;
+            const fechaFin = document.getElementById('fecha_fin').value;
+            if (fechaInicio && fechaFin) {
+                window.location.href = `/admin/reportes?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+            }
+        });
+    </script>
 </body>
 </html> 
